@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+</head>
+<body>
+
+    <script>
+      function redirect()
+      {
+         window.open("signup.html")
+      }  
+    </script>
+    <h1 center>Chat App</h1>
+
+    <form action="/login" method="post">
+        <input type="text" id="id" name="id" required><br>
+        <input type="password" id="pwd" name="pwd" required><br>
+        <input type="submit" value="login">
+    </form>
+    <input type="button" onclick="redirect()" value="signup">
+</body>
+</html>
