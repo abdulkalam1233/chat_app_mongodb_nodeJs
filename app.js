@@ -98,7 +98,7 @@ io.sockets.on('connection', (socket) => {
         
       }
       else
-          console.log('sad')
+        users[socket.nickname].emit('error-msg',"The user is't online");
     });
   
     socket.on('disconnect',(data) => {

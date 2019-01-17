@@ -28,3 +28,7 @@ socket.on('mes', function(data){
     output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
 });
 
+socket.on('error-msg',function(data){
+    feedback.innerHTML = '';
+    output.innerHTML += '<p color="red">' + data;
+})
