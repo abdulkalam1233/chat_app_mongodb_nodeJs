@@ -98,9 +98,9 @@ app.get('/chatting',(req,res) => {
           console.log('sad')
     });
   
-    socket.on('disconnect',(data) => {
-      nickname.splice(nickname.indexOf(socket .nickname),1)
-    });
+     socket.on('disconnect',(data) => {
+      users.splice(users.indexOf(socket.nickname),1)
+    }); 
   });
 })
 
