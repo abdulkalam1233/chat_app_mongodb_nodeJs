@@ -66,12 +66,12 @@ app.post('/login',(req,res) => {
 
 app.get('/chatting',(req,res) => {
 
-  res.sendfile(__dirname+'/public/userUi.html');
+  res.sendfile(__dirname+'/public/userUi.html');});
   io.sockets.on('connection', (socket) => {
   
-   
     socket.nickname = clients[clients.length - 1];
     users[socket.nickname] = socket;  
+    console.log(clients)
     // Handle chat event
     socket.on('chat', function(data){ 
       if(data.handle in users)
@@ -89,6 +89,7 @@ app.get('/chatting',(req,res) => {
           }
           else{
             console.log(msg);
+            users[socket.nickname].emit('mes',{'from':socket.nickname,'msg':data.message});
             users[data.handle].emit('mes',{'from':socket.nickname,'msg':data.message});
           }
         });
@@ -98,10 +99,9 @@ app.get('/chatting',(req,res) => {
           console.log('sad')
     });
   
-     socket.on('disconnect',(data) => {
+    /*  socket.on('disconnect',(data) => {
       users.splice(users.indexOf(socket.nickname),1)
-    }); 
+    });  */
   });
-})
 
 
