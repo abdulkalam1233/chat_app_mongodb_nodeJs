@@ -66,8 +66,10 @@ app.post('/login',(req,res) => {
 
 app.get('/chatting',(req,res) => {
 
-  res.sendfile(__dirname+'/public/userUi.html');});
-  io.sockets.on('connection', (socket) => {
+  res.sendfile(__dirname+'/public/userUi.html');
+});
+
+io.sockets.on('connection', (socket) => {
   
     socket.nickname = clients[clients.length - 1];
     users[socket.nickname] = socket;  
@@ -99,15 +101,11 @@ app.get('/chatting',(req,res) => {
           console.log('sad')
     });
   
-<<<<<<< HEAD
-    /*  socket.on('disconnect',(data) => {
-      users.splice(users.indexOf(socket.nickname),1)
-    });  */
-=======
     socket.on('disconnect',(data) => {
-      users.splice(users.indexOf(socket .nickname),1)
+      //clients.splice(clients.indexOf(socket.nickname),1)
+      delete users[socket.nickname]
     });
->>>>>>> 2cc52279a97effe428017451568d3826ef402da4
+    
   });
 
 
