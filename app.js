@@ -99,7 +99,7 @@ app.get('/chatting',(req,res) => {
     });
   
     socket.on('disconnect',(data) => {
-      nickname.splice(nickname.indexOf(socket .nickname),1)
+      users.splice(users.indexOf(socket .nickname),1)
     });
   });
 })
