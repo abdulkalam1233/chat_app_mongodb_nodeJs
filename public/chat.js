@@ -33,7 +33,7 @@ socket.on('showUsers',(data) =>{
         btn.setAttribute('id',element);
         btn.setAttribute('type',"button");
         btn.setAttribute('value',element);
-        usr.appendChild(btn);
+        usr.append(btn);
         btn.addEventListener('click',()=>{
             socket.emit('chat-hist',btn.id);
         })
@@ -49,6 +49,9 @@ socket.on('chat-hist',(data,msgs)=>{
         msgs.forEach(element => {
             output.innerHTML += '<p><strong>' + element.senderId + ': </strong>' + element.text + '</p>';
         })
+    }
+    else{
+        output.innerHTML="";
     }
     chatwith.innerHTML = ""
     chatwith.innerHTML = data;
@@ -101,4 +104,10 @@ socket.on('error-msg2',function(data){
     output.innerHTML+="<p>"+data+"</p>"
     
 })
+
+socket.on('disconnect',()=>{
+    console.log('here');
+    socket.emit('disconnect');
+})
+
 

@@ -29,6 +29,16 @@ var server = http.createServer(app);
 server.listen(8080);
 var io = socketio.listen(server);
 
+app.get('/', (req, res) => {
+
+  res.sendfile(__dirname + '/public/index.html');
+});
+
+app.get('/signup-page', (req, res) => {
+
+  res.sendfile(__dirname + '/public/signup.html');
+});
+
 app.post('/signup', (req, res) => {
   let newUser = new User();
   newUser.userId = req.body.uid;
@@ -67,9 +77,14 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/chatting', (req, res) => {
-
+  req.socket.emit('disconnect')
   res.sendfile(__dirname + '/public/userUi.html');
 });
+
+app.get('/logout',(req,res) => {
+  
+  res.sendFile(__dirname + '/public/index.html')
+})
 
 io.sockets.on('connection', (socket) => {
 
@@ -129,7 +144,8 @@ io.sockets.on('connection', (socket) => {
       }
     });
   });
-  socket.on('disconnect', (data) => {
-    delete users[socket.nickname]
+  socket.on('disconnect', () => {
+    
+    delete users[socket.nickname];
   });
 });

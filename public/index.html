@@ -4,13 +4,6 @@
   
 </head>
 <body>
-
-    <script>
-      function redirect()
-      {
-         window.open("signup.html")
-      }  
-    </script>
     <h1 center>Chat App</h1>
 
     <form action="/login" method="post">
@@ -18,6 +11,9 @@
         <input type="password" id="pwd" name="pwd" required><br>
         <input type="submit" value="login">
     </form>
-    <input type="button" onclick="redirect()" value="signup">
+    <form action='/signup-page'>
+        <input type="submit" value="signup">
+    </form>
+    
 </body>
 </html>
