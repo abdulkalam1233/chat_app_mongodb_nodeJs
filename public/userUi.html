@@ -8,14 +8,17 @@
         <link href="/styles.css" rel="stylesheet" />
     </head>
     <body>
-
-        <div id="mario-chat">
-            <h2>Mario Chat</h2>
+        <div id = "onlineUsers" style="text-align:left"></div>
+            <input type="button" id="showusers" value="users-online"/>
+            <div id='usr'></div>
+        </div>
+        <div id="mario-chat" >
+            <h2 id="sendto"></h2>
             <div id="chat-window">
                 <div id="output"></div>
                 <div id="feedback"></div>
             </div>
-            <input id="handle" type="text" placeholder="Handle" />
+            <p id="handle" value='enter the user' hidden="true"></p>
             <input id="message" type="text" placeholder="Message" />
             <button id="send">Send</button>
         </div>

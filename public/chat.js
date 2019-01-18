@@ -6,29 +6,99 @@ var message = document.getElementById('message'),
       handle = document.getElementById('handle'),
       btn = document.getElementById('send'),
       output = document.getElementById('output'),
-      feedback = document.getElementById('feedback');
+      feedback = document.getElementById('feedback'),
+      onlineUsers = document.getElementById('showusers'),
+      usr = document.getElementById('usr'),
+      chatwith = document.getElementById('sendto');
 
 // Emit events
 btn.addEventListener('click', function(){
     socket.emit('chat', {
         message: message.value,
-        handle: handle.value
+        //handle: handle.value
+        handle: handle.innerHTML
     });
     message.value = "";
 });
 
-message.addEventListener('keypress', function(){
-    socket.emit('typing', handle.value);
+onlineUsers.addEventListener('click', function(){
+    socket.emit('showUsers');
+});
+
+socket.on('showUsers',(data) =>{
+    usr.innerHTML=""
+    data.forEach(element => {
+        var btn= document.createElement('input');
+        btn.setAttribute('class','ousers');
+        btn.setAttribute('id',element);
+        btn.setAttribute('type',"button");
+        btn.setAttribute('value',element);
+        usr.appendChild(btn);
+        btn.addEventListener('click',()=>{
+            socket.emit('chat-hist',btn.id);
+        })
+        
+    });
 })
 
-// Listen for events
-socket.on('mes', function(data){
+socket.on('chat-hist',(data,msgs)=>{
+    console.log(msgs);
+    handle.innerHTML ="";
+    if(msgs.length>0){
+        output.innerHTML="";
+        msgs.forEach(element => {
+            output.innerHTML += '<p><strong>' + element.senderId + ': </strong>' + element.text + '</p>';
+        })
+    }
+    chatwith.innerHTML = ""
+    chatwith.innerHTML = data;
+    handle.innerHTML=data;
+});
+
+socket.on('mes-reciever', function(data){
+        //handle.innerHTML = data.to;
+        output.innerHTML = "";
+        socket.emit('chat-hist',handle.innerHTML);
+        output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+    
+});
+
+socket.on('mes-sender', function(data){
     feedback.innerHTML = '';
-    console.log(data.from+ ':'+ data.msg)
-    output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+    if(handle.innerHTML !== data.to){
+        handle.innerHTML = ""
+        handle.innerHTML = data.from;
+        chatwith.innerHTML = ""
+        chatwith.innerHTML = data.from;
+        
+        output.innerHTML = ""
+        socket.emit('chat-hist',handle.innerHTML);
+        output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+    }else{
+        chatwith.innerHTML = ""
+        chatwith.innerHTML = data.from;
+        handle.innerHTML = data.from;
+        output.innerHTML = ""
+        socket.emit('chat-hist',handle.innerHTML);
+        output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+    }
 });
 
 socket.on('error-msg',function(data){
     feedback.innerHTML = '';
-    output.innerHTML += '<p color="red">' + data;
+    if(data==='')
+    {
+        output.innerHTML=""
+        output.innerHTML+="<p>"+"Please choose one online user"+"</p>"
+    }
+    else
+    output.innerHTML += '<p>'+data+" is not online"+'</p>';
 })
+
+socket.on('error-msg2',function(data){
+    feedback.innerHTML = '';
+    
+    output.innerHTML+="<p>"+data+"</p>"
+    
+})
+

@@ -1,111 +1,135 @@
-const {mongoose} = require('./DB/mongoose');
-const {User} = require('./models/User');
-const {Message} = require('./models/Message');
+const {
+  mongoose
+} = require('./DB/mongoose');
+const {
+  User
+} = require('./models/User');
+const {
+  Message
+} = require('./models/Message');
 const express = require('express');
 const bodyparser = require('body-parser');
-
+const {
+  SHA256
+} = require('crypto-js');
 var socketio = require('socket.io');
 var http = require('http');
 
 const app = express();
 app.use(bodyparser.json());
-app.use(bodyparser.urlencoded({ extended: false }));
+app.use(bodyparser.urlencoded({
+  extended: false
+}));
 app.use(express.static('./public'));
 
 var clients = [];
 users = {};
-var server = http.createServer(app); 
+var server = http.createServer(app);
 
-server.listen(3000);
+server.listen(8080);
 var io = socketio.listen(server);
 
+app.post('/signup', (req, res) => {
+  let newUser = new User();
+  newUser.userId = req.body.uid;
+  newUser.name = req.body.uname;
+  newUser.age = req.body.age;
+  newUser.gender = req.body.gen;
+  newUser.pwd = req.body.pwd;
 
-app.post('/signup',(req,res)=>
-{
-    let newUser = new User();
-    newUser.userId = req.body.uid;
-    newUser.name = req.body.uname;
-    newUser.age = req.body.age;
-    newUser.gender = req.body.gen;
-    newUser.pwd = req.body.pwd;
-    
-    newUser.save((err,nUser) =>{
-      if(err)
-      {
-        console.log(err);
-        res.status(400).send("Unable to insert the user");
-      }
-      else{
-        clients.push(nUser.userId)
-        res.redirect('/chatting')
-      }
-    });
-  
+  newUser.save((err, nUser) => {
+    if (err) {
+      console.log(err);
+      res.status(400).send("Unable to insert the user");
+    } else {
+      clients.push(nUser.userId)
+      res.redirect('/chatting')
+    }
+  });
+
 });
 
-app.post('/login',(req,res) => {
-
-
-  User.find({userId:req.body.id,pwd:req.body.pwd},(err,doc)=>{
-
-    if(err)
-    {
+app.post('/login', (req, res) => {
+  User.find({
+    userId: req.body.id,
+    pwd: req.body.pwd
+  }, (err, doc) => {
+    if (err) {
       res.send('erro');
-    }
-    else if(doc.length == 0)
-    {
-      
+    } else if (doc.length == 0) {
+
       res.send("no result")
-    }
-    else{
+    } else {
       clients.push(req.body.id)
       res.redirect("/chatting");
-    }  
+    }
   });
 });
 
-app.get('/chatting',(req,res) => {
+app.get('/chatting', (req, res) => {
 
-  res.sendfile(__dirname+'/public/userUi.html');
+  res.sendfile(__dirname + '/public/userUi.html');
 });
 
 io.sockets.on('connection', (socket) => {
-  
-    socket.nickname = clients[clients.length - 1];
-    users[socket.nickname] = socket;  
-    console.log(clients)
-    // Handle chat event
-    socket.on('chat', function(data){ 
-      if(data.handle in users)
-      {
-        //console.log(clients[data.handle])
-        let newMessage = Message();
-        newMessage.senderId = socket.nickname;
-        newMessage.receiverId = data.handle;
-        newMessage.time = Date.now;
-        newMessage.text = data.message;
-        newMessage.save((err,msg) => {
-          if(err)
-          {
-            console.log('unable to store the message',err);
-          }
-          else{
-            console.log(msg);
-            users[socket.nickname].emit('mes',{'from':socket.nickname,'msg':data.message});
-            users[data.handle].emit('mes',{'from':socket.nickname,'msg':data.message});
-          }
-        });
-        
-      }
-      else
-        users[socket.nickname].emit('error-msg',"The user is't online");
-    });
-  
-    socket.on('disconnect',(data) => {
-      //clients.splice(clients.indexOf(socket.nickname),1)
-      delete users[socket.nickname]
-    });
-    
+
+  socket.nickname = clients[clients.length - 1];
+  users[socket.nickname] = socket;
+  // Handle chat event
+  socket.on('chat', function (data) {
+    console.log(data.handle)
+    if (data.handle in users) {
+      let newMessage = Message();
+      newMessage.senderId = socket.nickname;
+      newMessage.receiverId = data.handle;
+      newMessage.time = Date.now();
+      newMessage.text = data.message;
+      newMessage.save((err, msg) => {
+        if (err) {
+          socket.emit("err-msg2","unable to send message character must be 1")
+        } else {
+          users[socket.nickname].emit('mes-reciever', {
+            'from': socket.nickname,
+            'msg': data.message,
+            'to': data.handle
+          });
+          users[data.handle].emit('mes-sender', {
+            'from': socket.nickname,
+            'msg': data.message,
+            'to': data.handle
+          });
+        }
+      });
+
+    } else
+      users[socket.nickname].emit('error-msg', data.handle);
   });
 
+  socket.on('showUsers', function () {
+    users[socket.nickname].emit('showUsers', Object.keys(users));
+  });
 
+  socket.on('chat-hist', (data) => {
+
+    Message.find({
+      $or: [{
+        senderId: socket.nickname,
+        receiverId: data
+      }, {
+        senderId: data,
+        receiverId: socket.nickname
+      }]
+    }, (err, docs) => {
+      if (err) {
+
+      } else {
+        users[socket.nickname].emit('chat-hist', data, docs.sort({
+          time: 1
+        }));
+      }
+    });
+  });
+  socket.on('disconnect', (data) => {
+    delete users[socket.nickname]
+  });
+});
