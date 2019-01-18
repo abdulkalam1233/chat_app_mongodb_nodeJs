@@ -147,5 +147,13 @@ io.sockets.on('connection', (socket) => {
   socket.on('disconnect', () => {
     
     delete users[socket.nickname];
+    
   });
+
+  socket.on('typing',(data)=>{
+    if(data in users)
+      users[data].emit('typing',socket.nickname);
+    else
+      users[socket.nickname].emit('error-msg', data);
+  })
 });

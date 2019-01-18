@@ -9,7 +9,8 @@ var message = document.getElementById('message'),
       feedback = document.getElementById('feedback'),
       onlineUsers = document.getElementById('showusers'),
       usr = document.getElementById('usr'),
-      chatwith = document.getElementById('sendto');
+      chatwith = document.getElementById('sendto'),
+      typing = document.getElementById('typing');
 
 // Emit events
 btn.addEventListener('click', function(){
@@ -33,6 +34,7 @@ socket.on('showUsers',(data) =>{
         btn.setAttribute('id',element);
         btn.setAttribute('type',"button");
         btn.setAttribute('value',element);
+        btn.style.color = "darkgreen";
         usr.append(btn);
         btn.addEventListener('click',()=>{
             socket.emit('chat-hist',btn.id);
@@ -94,8 +96,15 @@ socket.on('error-msg',function(data){
         output.innerHTML=""
         output.innerHTML+="<p>"+"Please choose one online user"+"</p>"
     }
-    else
-    output.innerHTML += '<p>'+data+" is not online"+'</p>';
+    else{
+        
+        //output.innerHTML += '<p>'+data+" is not online"+'</p>';
+        output.innerHTML = "";
+        handle.innerHTML = "";
+        chatwith.innerHTML = "";
+        window.alert(data+" is not online");
+        socket.emit('showUsers');
+    }
 })
 
 socket.on('error-msg2',function(data){
@@ -110,4 +119,14 @@ socket.on('disconnect',()=>{
     socket.emit('disconnect');
 })
 
+message.addEventListener('keypress', ()=>{
+    socket.emit('typing',handle.innerHTML);
+    typing.innerHTML=""
+})
 
+
+socket.on('typing',(data)=>{
+    typing.innerHTML ='<span>'+data+" "+'is typing'+'</span>';
+   
+    chatwith.innerHTML = data;
+});
