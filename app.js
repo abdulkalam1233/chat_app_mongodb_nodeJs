@@ -49,7 +49,7 @@ app.post('/signup', (req, res) => {
 
   newUser.save((err, nUser) => {
     if (err) {
-      console.log(err);
+      //console.log(err);
       res.status(400).send("Unable to insert the user");
     } else {
       clients.push(nUser.userId)
@@ -92,7 +92,7 @@ io.sockets.on('connection', (socket) => {
   users[socket.nickname] = socket;
   // Handle chat event
   socket.on('chat', function (data) {
-    console.log(data.handle)
+    //console.log(data.handle)
     if (data.handle in users) {
       let newMessage = Message();
       newMessage.senderId = socket.nickname;
@@ -152,7 +152,14 @@ io.sockets.on('connection', (socket) => {
 
   socket.on('typing',(data)=>{
     if(data in users)
-      users[data].emit('typing',socket.nickname);
+      users[data].emit('typing',[data,socket.nickname]);
+    else
+      users[socket.nickname].emit('error-msg', data);
+  })
+
+  socket.on('notyping',(data)=>{
+    if(data in users)
+      users[data].emit('notyping');
     else
       users[socket.nickname].emit('error-msg', data);
   })

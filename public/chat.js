@@ -25,6 +25,10 @@ btn.addEventListener('click', function(){
 onlineUsers.addEventListener('click', function(){
     socket.emit('showUsers');
 });
+ window.setInterval(() => {
+    socket.emit('showUsers');
+},100)
+ 
 
 socket.on('showUsers',(data) =>{
     usr.innerHTML=""
@@ -34,17 +38,19 @@ socket.on('showUsers',(data) =>{
         btn.setAttribute('id',element);
         btn.setAttribute('type',"button");
         btn.setAttribute('value',element);
-        btn.style.color = "darkgreen";
+        btn.style.color="";
         usr.append(btn);
         btn.addEventListener('click',()=>{
             socket.emit('chat-hist',btn.id);
         })
-        
     });
+    
+    
 })
 
 socket.on('chat-hist',(data,msgs)=>{
-    console.log(msgs);
+    //socket.emit('showUsers');
+    
     handle.innerHTML ="";
     if(msgs.length>0){
         output.innerHTML="";
@@ -61,7 +67,9 @@ socket.on('chat-hist',(data,msgs)=>{
 });
 
 socket.on('mes-reciever', function(data){
+        
         //handle.innerHTML = data.to;
+        socket.emit('showUsers');
         output.innerHTML = "";
         socket.emit('chat-hist',handle.innerHTML);
         output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
@@ -69,27 +77,45 @@ socket.on('mes-reciever', function(data){
 });
 
 socket.on('mes-sender', function(data){
+    socket.emit('showUsers');
     feedback.innerHTML = '';
-    if(handle.innerHTML !== data.to){
+    if(handle.innerHTML === "")
+    {
         handle.innerHTML = ""
         handle.innerHTML = data.from;
         chatwith.innerHTML = ""
         chatwith.innerHTML = data.from;
-        
+
         output.innerHTML = ""
         socket.emit('chat-hist',handle.innerHTML);
         output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+    }
+    else if(handle.innerHTML !== data.from){
+    
+        /* usr.childNodes.forEach((element)=>{
+        
+            if(element.id === data.from)
+            {
+                element.style.color = "blue";
+                
+            }
+         }) */
+        
+         window.alert("You got new message from "+ data.from);
+        
     }else{
         chatwith.innerHTML = ""
         chatwith.innerHTML = data.from;
         handle.innerHTML = data.from;
         output.innerHTML = ""
         socket.emit('chat-hist',handle.innerHTML);
-        output.innerHTML += '<p><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+        output.innerHTML += '<p ><strong>' + data.from + ': </strong>' + data.msg + '</p>';
+        
     }
 });
 
 socket.on('error-msg',function(data){
+   
     feedback.innerHTML = '';
     if(data==='')
     {
@@ -103,11 +129,12 @@ socket.on('error-msg',function(data){
         handle.innerHTML = "";
         chatwith.innerHTML = "";
         window.alert(data+" is not online");
-        socket.emit('showUsers');
+        
     }
 })
 
 socket.on('error-msg2',function(data){
+    
     feedback.innerHTML = '';
     
     output.innerHTML+="<p>"+data+"</p>"
@@ -115,18 +142,31 @@ socket.on('error-msg2',function(data){
 })
 
 socket.on('disconnect',()=>{
+    
     console.log('here');
     socket.emit('disconnect');
 })
 
-message.addEventListener('keypress', ()=>{
-    socket.emit('typing',handle.innerHTML);
-    typing.innerHTML=""
-})
-
-
-socket.on('typing',(data)=>{
-    typing.innerHTML ='<span>'+data+" "+'is typing'+'</span>';
-   
-    chatwith.innerHTML = data;
+message.addEventListener('keydown', ()=>{
+    
+    socket.emit('typing',handle.innerHTML)
 });
+
+ message.addEventListener('keyup', ()=>{
+
+    socket.emit('notyping',handle.innerHTML);
+    
+});
+socket.on('typing',(data)=>{
+    
+    if(data[0] === handle.innerHTML || chatwith.innerHTML===""){
+        typing.innerHTML ='<span>'+data[1]+" "+'is typing'+'</span>';
+    
+        //chatwith.innerHTML = data[1];
+    }
+    
+});
+
+socket.on('notyping',()=>{
+    typing.innerHTML = "";
+})

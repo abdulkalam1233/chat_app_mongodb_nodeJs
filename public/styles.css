@@ -23,6 +23,7 @@ h2{
     overflow: hidden;
 }
  */
+
 #chat-window{
     height: 400px;
     overflow: auto;
@@ -45,6 +46,7 @@ h2{
 #output strong{
     color: #575ed8;
 }
+
 
 label{
     box-sizing: border-box;
