@@ -82,7 +82,7 @@ app.get('/chatting', (req, res) => {
 });
 
 app.get('/logout',(req,res) => {
-  req.socket.emit('disconnect')
+  req.socket.emit('logout')
   res.sendFile(__dirname + '/public/index.html')
 })
 
@@ -94,8 +94,8 @@ io.sockets.on('connection', (socket) => {
   socket.on('chat', function (data) {
     //console.log(data.handle)
     if (data.handle in users) {
-      User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:data.handle}}},(err,data)=>{
-        if(!data){
+      User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:data.handle}}},(err,doc)=>{
+        if(doc[0].blocklist.length == 1){
           let newMessage = Message();
           newMessage.senderId = socket.nickname;
           newMessage.receiverId = data.handle;
@@ -155,29 +155,54 @@ io.sockets.on('connection', (socket) => {
     delete users[socket.nickname];
     
   });
+  socket.on('logout', () => {
+    
+    delete users[socket.nickname];
+    
+  });
 
   socket.on('typing',(data)=>{
     if(data in users)
-      users[data].emit('typing',[data,socket.nickname]);
+    {
+      User.find({userId:data},{blocklist:{$elemMatch: {$eq:socket.nickname}}},(err,doc)=>{
+        if(doc[0].blocklist.length != 1){
+          users[data].emit('typing',[data,socket.nickname]);
+        }
+        else{
+          users[socket.nickname].emit('error-msg2', 'You are blocked');
+        }
+      });
+    }
+      
     else
       users[socket.nickname].emit('error-msg', data);
   })
 
   socket.on('notyping',(data)=>{
-    if(data in users)
-      users[data].emit('notyping');
+    if(data in users){
+          users[data].emit('notyping',[data,socket.nickname]);
+    }
     else
       users[socket.nickname].emit('error-msg', data);
   })
   socket.on('blockuser',(uid)=>{
     if(uid in users && uid !== socket.nickname){
-      User.update({userId:socket.nickname},{$addToSet:{blocklist:uid}},(err,data)=>{
-        console.log(data);
-      users[uid].emit('blocked-msg','you are blocked by '+socket.nickname);
+      User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:uid}}},(err,data)=>{
+        if(!data){
+          User.update({userId:socket.nickname},{$addToSet:{blocklist:uid}},(err,data)=>{
+            console.log(data);
+            users[socket.nickname].emit('blocked-msg','you blocked '+socket.nickname);
+            users[uid].emit('blocked-msg','you are blocked by '+socket.nickname);
+          });
+        }
+        else{
+          users[socket.nickname].emit('error-msg2', 'he is already blocked');
+        }
       });
+      
     }
     else{
-
+      users[socket.nickname].emit('error-msg',uid);
     }
     
   })

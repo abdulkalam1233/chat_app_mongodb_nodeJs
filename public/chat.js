@@ -30,9 +30,9 @@ btn.addEventListener('click', function(){
 onlineUsers.addEventListener('click', function(){
     socket.emit('showUsers');
 });
- window.setInterval(() => {
+/*  window.setInterval(() => {
     socket.emit('showUsers');
-},100)
+},100) */
  
 
 socket.on('showUsers',(data) =>{
@@ -146,7 +146,7 @@ socket.on('error-msg2',function(data){
     
 })
 
-socket.on('disconnect',()=>{
+socket.on('logout',()=>{
     
     console.log('here');
     socket.emit('disconnect');
