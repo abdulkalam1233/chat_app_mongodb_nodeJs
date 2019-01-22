@@ -25,7 +25,7 @@ var User = new mongoose.model('User',{
     trim : true,
     required : true
   },
-  blocklist:[String],
+  blocklist:[],
   pwd:{
     type:String,
     require:true

@@ -12,6 +12,11 @@ var message = document.getElementById('message'),
       chatwith = document.getElementById('sendto'),
       typing = document.getElementById('typing');
 
+var block = document.getElementById('block');
+block.addEventListener('click',() =>{
+    if(handle.innerHTML!=='')
+        socket.emit('blockuser',handle.innerHTML);
+})
 // Emit events
 btn.addEventListener('click', function(){
     socket.emit('chat', {
@@ -50,7 +55,7 @@ socket.on('showUsers',(data) =>{
 
 socket.on('chat-hist',(data,msgs)=>{
     //socket.emit('showUsers');
-    
+    block.style.display="block";
     handle.innerHTML ="";
     if(msgs.length>0){
         output.innerHTML="";
@@ -169,4 +174,8 @@ socket.on('typing',(data)=>{
 
 socket.on('notyping',()=>{
     typing.innerHTML = "";
+})
+
+socket.on('blocked-msg',(data) => {
+    output.innerHTML+='<p>'+data+'</p';
 })

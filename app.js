@@ -77,12 +77,12 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/chatting', (req, res) => {
-  req.socket.emit('disconnect')
+  
   res.sendfile(__dirname + '/public/userUi.html');
 });
 
 app.get('/logout',(req,res) => {
-  
+  req.socket.emit('disconnect')
   res.sendFile(__dirname + '/public/index.html')
 })
 
@@ -94,29 +94,35 @@ io.sockets.on('connection', (socket) => {
   socket.on('chat', function (data) {
     //console.log(data.handle)
     if (data.handle in users) {
-      let newMessage = Message();
-      newMessage.senderId = socket.nickname;
-      newMessage.receiverId = data.handle;
-      newMessage.time = Date.now();
-      newMessage.text = data.message;
-      newMessage.save((err, msg) => {
-        if (err) {
-          socket.emit("err-msg2","unable to send message character must be 1")
-        } else {
-          users[socket.nickname].emit('mes-reciever', {
-            'from': socket.nickname,
-            'msg': data.message,
-            'to': data.handle
+      User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:data.handle}}},(err,data)=>{
+        if(!data){
+          let newMessage = Message();
+          newMessage.senderId = socket.nickname;
+          newMessage.receiverId = data.handle;
+          newMessage.time = Date.now();
+          newMessage.text = data.message;
+          newMessage.save((err, msg) => {
+            if (err) {
+              socket.emit("err-msg2","unable to send message character must be 1")
+            } else {
+              users[socket.nickname].emit('mes-reciever', {
+                'from': socket.nickname,
+                'msg': data.message,
+                'to': data.handle
+              });
+              users[data.handle].emit('mes-sender', {
+                'from': socket.nickname,
+                'msg': data.message,
+                'to': data.handle
+              });
+            }
           });
-          users[data.handle].emit('mes-sender', {
-            'from': socket.nickname,
-            'msg': data.message,
-            'to': data.handle
-          });
-        }
-      });
 
-    } else
+        }
+        else
+         users[socket.nickname].emit('error-msg2', 'You are blocked');
+      });
+    }else
       users[socket.nickname].emit('error-msg', data.handle);
   });
 
@@ -162,5 +168,17 @@ io.sockets.on('connection', (socket) => {
       users[data].emit('notyping');
     else
       users[socket.nickname].emit('error-msg', data);
+  })
+  socket.on('blockuser',(uid)=>{
+    if(uid in users && uid !== socket.nickname){
+      User.update({userId:socket.nickname},{$addToSet:{blocklist:uid}},(err,data)=>{
+        console.log(data);
+      users[uid].emit('blocked-msg','you are blocked by '+socket.nickname);
+      });
+    }
+    else{
+
+    }
+    
   })
 });
