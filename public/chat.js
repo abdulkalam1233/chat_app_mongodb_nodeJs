@@ -13,9 +13,16 @@ var message = document.getElementById('message'),
       typing = document.getElementById('typing');
 
 var block = document.getElementById('block');
+var unblock = document.getElementById('unblock');
+
 block.addEventListener('click',() =>{
     if(handle.innerHTML!=='')
         socket.emit('blockuser',handle.innerHTML);
+})
+
+unblock.addEventListener('click',() =>{
+    if(handle.innerHTML!=='')
+        socket.emit('unblockuser',handle.innerHTML);
 })
 // Emit events
 btn.addEventListener('click', function(){
@@ -56,6 +63,7 @@ socket.on('showUsers',(data) =>{
 socket.on('chat-hist',(data,msgs)=>{
     //socket.emit('showUsers');
     block.style.display="block";
+    unblock.style.display="block";
     handle.innerHTML ="";
     if(msgs.length>0){
         output.innerHTML="";
@@ -82,7 +90,7 @@ socket.on('mes-reciever', function(data){
 });
 
 socket.on('mes-sender', function(data){
-    socket.emit('showUsers');
+    
     feedback.innerHTML = '';
     if(handle.innerHTML === "")
     {

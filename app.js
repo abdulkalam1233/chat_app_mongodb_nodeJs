@@ -95,7 +95,7 @@ io.sockets.on('connection', (socket) => {
     //console.log(data.handle)
     if (data.handle in users) {
       User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:data.handle}}},(err,doc)=>{
-        if(doc[0].blocklist.length == 1){
+        if(doc[0].blocklist.length != 1){
           let newMessage = Message();
           newMessage.senderId = socket.nickname;
           newMessage.receiverId = data.handle;
@@ -127,7 +127,7 @@ io.sockets.on('connection', (socket) => {
   });
 
   socket.on('showUsers', function () {
-    users[socket.nickname].emit('showUsers', Object.keys(users));
+    io.sockets.emit('showUsers', Object.keys(users));
   });
 
   socket.on('chat-hist', (data) => {
@@ -188,15 +188,37 @@ io.sockets.on('connection', (socket) => {
   socket.on('blockuser',(uid)=>{
     if(uid in users && uid !== socket.nickname){
       User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:uid}}},(err,data)=>{
-        if(!data){
+        if(data[0].blocklist.length==0){
           User.update({userId:socket.nickname},{$addToSet:{blocklist:uid}},(err,data)=>{
             console.log(data);
-            users[socket.nickname].emit('blocked-msg','you blocked '+socket.nickname);
+            users[socket.nickname].emit('blocked-msg','you blocked '+uid);
             users[uid].emit('blocked-msg','you are blocked by '+socket.nickname);
           });
         }
         else{
           users[socket.nickname].emit('error-msg2', 'he is already blocked');
+        }
+      });
+      
+    }
+    else{
+      users[socket.nickname].emit('error-msg',uid);
+    }
+    
+  })
+
+  socket.on('unblockuser',(uid)=>{
+    if(uid in users && uid !== socket.nickname){
+      User.find({userId:socket.nickname},{blocklist:{$elemMatch: {$eq:uid}}},(err,data)=>{
+        if(data[0].blocklist.length==1){
+          User.update({userId:socket.nickname},{$pull:{blocklist:{$in:[uid]}}},(err,data)=>{
+            console.log(data);
+            users[socket.nickname].emit('blocked-msg','you unblocked '+uid);
+            users[uid].emit('blocked-msg','you are unblocked by '+socket.nickname);
+          });
+        }
+        else{
+          users[socket.nickname].emit('error-msg2', 'he is not blocked');
         }
       });
       
