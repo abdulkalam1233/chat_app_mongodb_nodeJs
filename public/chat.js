@@ -30,9 +30,9 @@ btn.addEventListener('click', function(){
 onlineUsers.addEventListener('click', function(){
     socket.emit('showUsers');
 });
-/*  window.setInterval(() => {
+  window.setInterval(() => {
     socket.emit('showUsers');
-},100) */
+},2000) 
  
 
 socket.on('showUsers',(data) =>{
